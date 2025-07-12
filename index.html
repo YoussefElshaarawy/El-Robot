@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>El-Robot Blog – Golden Glass Drawer</title>
+
+<!-- Tailwind + Roboto -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet"/>
+
+<style>
+/* === GLOBAL ====================================================== */
+body{margin:0;background:#fff;color:#000;font-family:'Roboto',system-ui,sans-serif;}
+
+/* === ELECTRIC-YELLOW HEADER (fixed) ============================== */
+.header{
+  position:fixed;inset:0 0 auto 0;height:64px;z-index:6000; /* stays on screen */
+  display:flex;align-items:center;
+  background:linear-gradient(180deg,
+    rgba(255,230,0,.85) 0%,
+    rgba(255,230,0,.12) 60%,
+    rgba(255,230,0,0)  100%);
+  backdrop-filter:blur(2px) saturate(1.2);
+  -webkit-backdrop-filter:blur(2px) saturate(1.2);
+}
+
+/* === GLASS PILL BADGE =========================================== */
+.badge-wrap{position:relative;width:max-content;margin-left:.6rem;}
+.badge-bg{
+  position:absolute;inset:0;border-radius:9999px;
+  background:rgba(255,255,255,.14);
+  backdrop-filter:blur(18px) saturate(1.8);
+  -webkit-backdrop-filter:blur(18px) saturate(1.8);
+  border:1px solid rgba(0,0,0,.22);
+  box-shadow:inset 0 0 8px rgba(255,255,255,.5),
+             0 2px 6px rgba(0,0,0,.1);
+}
+.badge-bg::after{
+  content:'';position:absolute;inset:1px;border-radius:9999px;
+  background:linear-gradient(140deg,
+      rgba(255,255,255,.8) 0%,
+      rgba(255,255,255,.25) 40%,
+      rgba(255,255,255,0)  70%);
+  mix-blend-mode:screen;
+}
+.badge-content{
+  position:relative;padding:.46rem 1.35rem;
+  font-size:.9rem;font-weight:500;letter-spacing:.02em;
+  text-shadow:0 1px 1px rgba(255,255,255,.5);
+  user-select:none;
+}
+
+/* === BURGER / X (top-layer, always visible) ====================== */
+#burgerBox{
+  position:fixed;top:.7rem;right:.7rem;z-index:9999;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  background:rgba(255,255,255,.18);padding:.35rem;border-radius:8px;
+}
+.burger{width:30px;height:26px;cursor:pointer;position:relative;}
+.burger span{
+  position:absolute;left:0;width:100%;height:3px;background:#000;border-radius:2px;
+  transition:transform .4s cubic-bezier(.4,0,.2,1),opacity .3s;
+}
+.burger span:nth-child(1){top:0;}
+.burger span:nth-child(2){top:50%;transform:translateY(-50%);}
+.burger span:nth-child(3){bottom:0;}
+.burger.open span:nth-child(1){transform:translateY(11px) rotate(45deg);}
+.burger.open span:nth-child(2){opacity:0;}
+.burger.open span:nth-child(3){transform:translateY(-11px) rotate(-45deg);}
+
+/* === DRAWER (golden ratio, blur 24 px) =========================== */
+:root{--drawerW:38.2vw;--drawerBlur:24px;}
+.drawer{
+  position:fixed;top:0;right:0;bottom:0;width:var(--drawerW);
+  transform:translateX(100%);transition:transform .45s cubic-bezier(.4,0,.2,1);
+  background:rgba(255,255,255,.14);
+  backdrop-filter:blur(var(--drawerBlur)) saturate(1.8);
+  -webkit-backdrop-filter:blur(var(--drawerBlur)) saturate(1.8);
+  border-left:1px solid rgba(0,0,0,.15);
+  box-shadow:0 0 22px rgba(0,0,0,.18);
+  display:flex;flex-direction:column;gap:1.8rem;
+  padding:5rem 2rem 2rem;z-index:8000;          /* under burger, over header */
+}
+.drawer.open{transform:translateX(0);}
+.drawer a{
+  font-size:clamp(1.4rem,6vw,3rem);font-weight:500;color:#000;
+  text-decoration:none;line-height:1.15;transition:opacity .25s;
+}
+.drawer a:hover{opacity:.6;}
+
+/* === DEMO IMAGE ================================================= */
+.demo-img{
+  width:500px;height:300px;border-radius:12px;margin:5.5rem 0 2rem 1.5rem;
+  background:url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1000&q=80')
+          center/cover no-repeat;
+  box-shadow:0 6px 14px rgba(0,0,0,.15);
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="badge-wrap">
+    <div class="badge-bg"></div><div class="badge-content">El-Robot Blog</div>
+  </div>
+</header>
+
+<!-- BURGER / X (independent fixed layer) -->
+<div id="burgerBox">
+  <div id="burger" class="burger"><span></span><span></span><span></span></div>
+</div>
+
+<!-- DRAWER -->
+<nav id="drawer" class="drawer">
+  <a href="#">Home</a><a href="#">Posts</a><a href="#">Demos</a>
+  <a href="#">About Youssef</a><a href="#">Credits & Gratitude 🤗</a>
+</nav>
+
+<!-- MAIN -->
+<main>
+  <div class="demo-img"></div>
+  <div style="height:130vh;"></div>
+</main>
+
+<!-- SCRIPT -->
+<script>
+const burger=document.getElementById('burger'),
+      drawer=document.getElementById('drawer');
+burger.addEventListener('click',()=>{
+  burger.classList.toggle('open');
+  drawer.classList.toggle('open');
+});
+drawer.querySelectorAll('a').forEach(a=>{
+  a.addEventListener('click',()=>{
+    burger.classList.remove('open');
+    drawer.classList.remove('open');
+  });
+});
+</script>
+
+</body>
+</html>
