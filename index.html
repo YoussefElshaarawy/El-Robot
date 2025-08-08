@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<title>Warhol 5 — Fixed Composer (iPhone‑optimised)</title>
+<title>Warhol 5 — Fixed Composer (iPhone-optimised)</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Recursive:opsz,wdth,wght,slnt,CASL@14..32,75..100,400..800,-15..0,0..1&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg1:#f3c7b9; --bg2:#ffe3b9; --bg3:#e9e5ff; --bg4:#dfe9ff;
-    --surface:#fff; --border: rgba(2,6,23,.10); --text:#0b1324; --muted:#475569;
-    --chip:#f5f7fb; --sidebar:#f7f8fb;
-    --shadow: 0 8px 24px rgba(2,6,23,.10), 0 1px 2px rgba(2,6,23,.06);
+    --surface:#ffffff; --border: rgba(255,255,255,.5); --text:#0b1324; --muted:#475569;
+    --sidebar:#f7f8fb; --shadow: 0 8px 24px rgba(2,6,23,.10), 0 1px 2px rgba(2,6,23,.06);
+    --sidebarW:64px; /* shrinks via media queries */
   }
   *{box-sizing:border-box}
   html,body{height:100%;}
@@ -31,10 +31,10 @@
   }
 
   /* Layout */
-  .app{ display:grid; grid-template-columns: 64px 1fr; min-height:100svh; min-height:100dvh; }
-  .sidebar{ border-right:1px solid rgba(2,6,23,.06); padding:8px 8px; background: linear-gradient(180deg, #fff, #f9fbff); }
+  .app{ display:grid; grid-template-columns: var(--sidebarW) 1fr; min-height:100svh; min-height:100dvh; }
+  .sidebar{ border-right:1px solid rgba(2,6,23,.06); padding:8px; background: linear-gradient(180deg, #fff, #f9fbff); }
   .side-item{
-    width:44px;height:44px;border-radius:12px;
+    width:40px;height:40px;border-radius:12px;
     display:grid;place-items:center;margin:10px auto;
     background:var(--sidebar); border:1px solid rgba(2,6,23,.06);
     box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
@@ -46,63 +46,71 @@
 
   .main{ position:relative; display:flex; flex-direction:column; min-height:100%; }
   .brand{
-    position:absolute; top:12px; left:16px; display:flex; align-items:center; gap:10px;
-    font-family:"Recursive", Inter, system-ui; font-variation-settings:"CASL" .6, "wdth" 90, "wght" 720, "slnt" 0;
+    position:absolute; top:12px; left:12px; display:flex; align-items:center; gap:8px;
+    font-family:"Recursive", Inter, system-ui;
+    font-variation-settings:"CASL" .6, "wdth" 90, "wght" 720, "slnt" 0;
     letter-spacing:-.01em;
   }
   .brand strong{ font-variation-settings:"CASL" .5, "wdth" 86, "wght" 800 }
 
   /* Scroll area (hero + chat) */
-  .scroll{ flex:1 1 auto; overflow:auto; padding:24px 16px calc(180px + env(safe-area-inset-bottom)); /* space for composer */ }
+  .scroll{
+    flex:1 1 auto; overflow:auto;
+    padding:24px 12px calc(180px + env(safe-area-inset-bottom)); /* keep room for composer */
+  }
   .hero{ min-height:55vh; display:grid; place-items:center; }
   .center{ text-align:center; max-width:760px; margin:0 auto; }
   h1{
     margin:0 0 8px; font-family:"Recursive", Inter, system-ui;
-    font-variation-settings:"CASL" .7, "wdth" 88, "wght" 780, "slnt" -3; font-size:clamp(22px, 5vw, 32px);
+    font-variation-settings:"CASL" .7, "wdth" 88, "wght" 780, "slnt" -3;
+    font-size:clamp(22px, 5vw, 32px);
   }
   .subtitle{ margin:0 auto 26px; max-width:560px; font-size:15px; line-height:1.6; color:var(--muted) }
 
   .chat{ max-width:860px; margin:0 auto; display:none; }
-  .msg{ display:flex; gap:12px; margin:18px 0; align-items:flex-start }
-  .avatar{ flex:0 0 32px; width:32px;height:32px;border-radius:8px; display:grid;place-items:center;
-    background:#111827; color:#fff; font-weight:700; font-size:12px;}
-  .assistant{ background:#1e293b }
-  .bubble{
-    background:#ffffffcc; backdrop-filter: blur(6px);
-    border:1px solid rgba(2,6,23,.08);
-    padding:12px 14px; border-radius:14px;
-    box-shadow: 0 4px 14px rgba(2,6,23,.06);
-    max-width: 90%;
+  .msg{ display:flex; gap:10px; margin:18px 0; align-items:flex-start }
+  .avatar{
+    flex:0 0 28px; width:28px;height:28px;border-radius:8px; display:grid;place-items:center;
+    background:#111827; color:#fff; font-weight:700; font-size:11px;
   }
-  .loading{ font-family:"Recursive", Inter; font-variation-settings:"CASL" .5, "wdth" 95, "wght" 600, "slnt" -4; }
-  .loading .dots{ display:inline-block; width:24px; text-align:left }
-  .loading .dots::after{ content:"…"; animation: ellipsis 1.2s infinite steps(3,end); }
-  @keyframes ellipsis{ 0%{content:"";} 33%{content:".";} 66%{content:"..";} 100%{content:"...";} }
+  .assistant{ background:#1e293b }
 
-  /* Composer fixed at bottom, always visible */
+  /* Glass bubbles / cards / composer */
+  .bubble, .composer, .card{
+    background: rgba(255,255,255,0.22);
+    backdrop-filter: blur(14px) saturate(180%);
+    -webkit-backdrop-filter: blur(14px) saturate(180%);
+    border: 1px solid rgba(255,255,255,0.4);
+    box-shadow: 0 8px 32px rgba(2,6,23,0.12);
+  }
+
+  .bubble{
+    padding:12px 14px; border-radius:14px;
+    max-width: calc(100vw - var(--sidebarW) - 28px);
+  }
+
+  /* Composer fixed at bottom */
   .composer-wrap{
-    position:fixed; left:64px; right:0; bottom: max(16px, env(safe-area-inset-bottom)); z-index:30;
+    position:fixed; left:var(--sidebarW); right:0;
+    bottom: max(12px, env(safe-area-inset-bottom)); z-index:30;
     display:grid; place-items:center; pointer-events:none; transition: transform .2s ease;
   }
   .composer{
-    pointer-events:all;
-    display:flex; align-items:center; gap:10px;
-    width:min(760px, 92vw);
-    background:var(--surface); border:1px solid var(--border);
-    border-radius:999px; padding:10px 12px; box-shadow:var(--shadow);
+    pointer-events:all; display:flex; align-items:center; gap:10px;
+    width: calc(100vw - var(--sidebarW) - 24px); max-width:720px;
+    border-radius:999px; padding:10px 12px;
   }
-  .chip{ width:40px;height:40px;border-radius:999px; display:grid;place-items:center;
-    border:1px solid rgba(2,6,23,.10); background:#f3f5f9; cursor:pointer; }
+  .chip{ width:36px;height:36px;border-radius:999px; display:grid;place-items:center; border:1px solid rgba(255,255,255,.45); background:rgba(255,255,255,.35); cursor:pointer; }
   .chip svg{ width:16px;height:16px; opacity:.9 }
-  .plus{ background:#eef2f6 }
+  .plus{ background:rgba(255,255,255,.45) }
   .input{ flex:1; display:flex; align-items:center}
-  /* Prevent iOS zoom-on-focus: keep >=16px */
-  .input input{ width:100%; border:none; outline:none; font-size:16px; padding:10px 6px; background:transparent; }
+  .input input{ width:100%; border:none; outline:none; font-size:16px; padding:10px 6px; background:transparent; color:#0b1324; }
 
   /* Card + lightbox */
-  .card{ width: min(560px, 92vw); aspect-ratio:1/1; background:#fff; border:1px solid rgba(2,6,23,.08);
-    border-radius:16px; overflow:hidden; box-shadow:0 20px 50px rgba(2,6,23,.2), 0 2px 6px rgba(2,6,23,.08);
-    margin-top:12px; cursor:zoom-in; }
+  .card{
+    width: 100%; max-width: 560px; aspect-ratio:1/1;
+    border-radius:16px; overflow:hidden; margin-top:12px; cursor:zoom-in;
+  }
   .card img{ width:100%; height:100%; object-fit:cover; display:block }
   .caption{ font-size:12px; color:#334155; margin-top:6px }
 
@@ -111,9 +119,15 @@
   .lightbox:focus{ outline:none }
 
   /* Drawer (assets) */
-  .drawer{ position:fixed; top:0; right:-420px; width:420px; max-width:92vw; height:100%;
-    background:#fff; border-left:1px solid rgba(2,6,23,.08); box-shadow:-20px 0 60px rgba(2,6,23,.18);
-    transition:right .28s ease; padding:18px; display:flex; flex-direction:column; gap:12px; z-index:50; }
+  .drawer{
+    position:fixed; top:0; right:-420px; width:420px; max-width:92vw; height:100%;
+    background:rgba(255,255,255,.75);
+    -webkit-backdrop-filter: blur(10px) saturate(160%);
+    backdrop-filter: blur(10px) saturate(160%);
+    border-left:1px solid rgba(255,255,255,.45);
+    box-shadow:-20px 0 60px rgba(2,6,23,.18);
+    transition:right .28s ease; padding:18px; display:flex; flex-direction:column; gap:12px; z-index:50;
+  }
   .drawer.open{ right:0; }
   .dropzone{ padding:18px; border:2px dashed rgba(2,6,23,.15); border-radius:14px; background:#f8fafc; text-align:center }
   .dropzone.drag{ border-color:#0ea5e9; background:#eef6ff; }
@@ -128,17 +142,18 @@
 
   /* Mobile tweaks */
   @media (max-width:720px){
-    .app{ grid-template-columns:56px 1fr }
-    .composer-wrap{ left:56px }
-    .thumbs{ grid-template-columns:repeat(2,1fr) }
+    :root{ --sidebarW:52px; }
     .subtitle{ font-size:14px }
+    .thumbs{ grid-template-columns:repeat(2,1fr) }
   }
-  @media (max-width:420px){
-    .brand{ top:10px; left:12px; font-size:14px }
-    .composer{ width:min(720px, 94vw); }
+  @media (max-width:430px){
+    :root{ --sidebarW:44px; }
+    .brand{ top:10px; left:10px; font-size:13px }
+    .side-item{ width:34px; height:34px; border-radius:10px }
+    .composer{ width: calc(100vw - var(--sidebarW) - 20px); }
   }
 
-  /* When keyboard opens and we shift the composer using visualViewport */
+  /* When keyboard opens on iOS */
   .kb-open .composer-wrap{ transform: translateY(-12px); }
 </style>
 </head>
@@ -180,7 +195,7 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
         </button>
         <label class="input" for="prompt" style="display:flex; align-items:center; gap:6px;">
-          <input id="prompt" placeholder="Ask anything — each message reveals the next queued image" aria-label="Ask anything" autocomplete="off" inputmode="text"/>
+          <input id="prompt" placeholder="Ask anything" aria-label="Ask anything" autocomplete="off" inputmode="text"/>
         </label>
         <button class="chip" id="btnAssets2" title="Assets" aria-label="Open assets drawer">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M4 10h16" stroke="currentColor" stroke-width="1.4"/></svg>
@@ -298,7 +313,7 @@
     msg.append(avatar, bubble);
     thread.appendChild(msg);
     chat.style.display='block';
-    // Scroll to bottom of conversation (not the page)
+    // Scroll to bottom of the scrollable conversation area
     scrollArea.scrollTo({top: scrollArea.scrollHeight, behavior:'smooth'});
     return bubble;
   }
@@ -322,6 +337,10 @@
     wrap.appendChild(card);
     const cap = document.createElement('div'); cap.className = 'caption'; cap.textContent = item.name; wrap.appendChild(cap);
     const bubble = addMsg('assistant', ''); bubble.appendChild(wrap);
+
+    // Keep the new result fully in view on mobile
+    bubble.scrollIntoView({behavior:'smooth', block:'end'});
+    scrollArea.scrollTo({top: scrollArea.scrollHeight, behavior:'smooth'});
 
     card.addEventListener('click', ()=>{ lbImg.src = item.url; lightbox.style.display='flex'; lightbox.focus(); });
   }
@@ -357,24 +376,23 @@
     elPrompt.focus();
   };
 
-  // iOS keyboard handling: keep composer visible and avoid layout jumps
-  // Uses Visual Viewport API (supported on iOS Safari 13+)
+  // iOS keyboard handling: keep composer visible and avoid layout jumps (Visual Viewport API)
   if (window.visualViewport) {
     const onVVChange = () => {
       const vv = window.visualViewport;
       if(!vv) return;
-      const bottomOffset = Math.max(16, (window.innerHeight - (vv.height + vv.offsetTop)) + 16);
-      // Reserve space when keyboard overlaps
+      const overlap = Math.max(0, (window.innerHeight - (vv.height + vv.offsetTop)));
+      const bottomOffset = 12 + overlap;
       composerWrap.style.bottom = `calc(${bottomOffset}px + env(safe-area-inset-bottom))`;
       document.body.classList.toggle('kb-open', vv.height < window.innerHeight * 0.9);
-      // Keep the input visible
+      // Keep input visible when keyboard opens
       scrollArea.scrollTo({ top: scrollArea.scrollHeight });
     };
     visualViewport.addEventListener('resize', onVVChange);
     visualViewport.addEventListener('scroll', onVVChange);
   }
 
-  // Focus management: ensure composer remains accessible
+  // Focus management
   elPrompt.addEventListener('focus', ()=>{
     setTimeout(()=>{ scrollArea.scrollTo({ top: scrollArea.scrollHeight, behavior: 'smooth' }); }, 50);
   });
