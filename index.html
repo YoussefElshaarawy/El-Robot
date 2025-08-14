@@ -1,220 +1,210 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<title>Tilt Depth — iOS-Safe Starter</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>El-Robot Blog – Glass UI + Wheel</title>
+
+<!-- Tailwind helpers + fonts -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:wght@500..900,wdth@75..125" rel="stylesheet">
+
 <style>
-  :root{ --max-tilt: 12deg; --max-shift: 28px; --z1: 80px; --z2: 40px; --z3: 0; --z4: -30px; }
-  @media (prefers-reduced-motion: reduce){ :root{ --max-tilt: 4deg; --max-shift: 10px; --z1: 24px; --z2: 12px; --z3: 0; --z4: 0; } }
-  html,body{height:100%;margin:0;background:#07090c;color:#eaf2ff;font-family:-apple-system, system-ui, Segoe UI, Inter, Roboto, Arial}
-  .wrap{position:fixed;inset:0;display:grid;place-items:center;padding:env(safe-area-inset-top) env(safe-area-inset-right) calc(16px + env(safe-area-inset-bottom)) env(safe-area-inset-left)}
-  .scene{width:min(92vw,520px);height:min(64vh,560px);perspective:900px;perspective-origin:50% 45%}
-  .card{position:relative;width:100%;height:100%;transform-style:preserve-3d;border-radius:24px;overflow:hidden;
-    background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);box-shadow:0 20px 50px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06)}
-  .layer{position:absolute;inset:0;transform-style:preserve-3d;display:grid;place-items:center;pointer-events:none}
-  .bg{background:
-    radial-gradient(180px 120px at 15% 20%, rgba(0,200,255,.25), transparent 60%),
-    radial-gradient(220px 200px at 85% 80%, rgba(120,70,255,.25), transparent 60%),
-    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0))}
-  .grid{background-image:
-      linear-gradient(transparent 31px, rgba(255,255,255,.06) 32px),
-      linear-gradient(90deg, transparent 31px, rgba(255,255,255,.06) 32px);
-    background-size:32px 32px;mask-image:radial-gradient(100% 70% at 50% 50%, #000, transparent 85%)}
-  .orb{width:210px;height:210px;border-radius:999px;
-    background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.95), rgba(180,220,255,.5) 40%, rgba(0,0,0,0) 70%),
-               radial-gradient(circle at 70% 70%, rgba(120,180,255,.35), rgba(0,0,0,0) 60%);
-    box-shadow:0 30px 60px rgba(60,130,255,.35)}
-  .title{font-weight:700;text-align:center;line-height:1.2;text-shadow:0 2px 10px rgba(0,0,0,.4)}
-  .title h1{font-size:clamp(22px,4.2vw,34px);margin:0 18px}
-  .title p{font-size:clamp(14px,2.6vw,16px);margin:8px 20px 0;opacity:.85}
-  .hud{position:absolute;left:12px;right:12px;bottom:12px;display:flex;gap:10px;align-items:center;justify-content:space-between}
-  .btn{appearance:none;border:0;border-radius:14px;padding:12px 16px;font-weight:600;background:rgba(255,255,255,.12);color:#eaf3ff;backdrop-filter:blur(8px)}
-  .chip{padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.09);font-size:12px}
-  .diag{position:fixed;left:10px;top:10px;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);padding:8px 10px;border-radius:10px;font:12px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;white-space:pre}
+/* ========== GLOBAL ================================================= */
+body{margin:0;background:#fff;color:#000;font-family:'Roboto',system-ui,sans-serif;}
+
+/* ========= ELECTRIC-YELLOW header ================================== */
+.header{
+  position:fixed;inset:0 0 auto 0;height:64px;z-index:6000;
+  display:flex;align-items:center;
+  background:linear-gradient(180deg,
+    rgba(255,230,0,.85) 0%,
+    rgba(255,230,0,.12) 60%,
+    rgba(255,230,0,0)  100%);
+  backdrop-filter:blur(2px) saturate(1.2);
+  -webkit-backdrop-filter:blur(2px) saturate(1.2);
+}
+
+/* —— glass pill ———————————————————————— */
+.badge-wrap{position:relative;width:max-content;margin-left:.6rem;}
+.badge-bg{
+  position:absolute;inset:0;border-radius:9999px;
+  background:rgba(255,255,255,.14);
+  backdrop-filter:blur(18px) saturate(1.8);
+  -webkit-backdrop-filter:blur(18px) saturate(1.8);
+  border:1px solid rgba(0,0,0,.22);
+  box-shadow:inset 0 0 8px rgba(255,255,255,.5),0 2px 6px rgba(0,0,0,.1);
+}
+.badge-bg::after{
+  content:'';position:absolute;inset:1px;border-radius:9999px;
+  background:linear-gradient(140deg,
+      rgba(255,255,255,.8) 0%,
+      rgba(255,255,255,.25) 40%,
+      rgba(255,255,255,0)  70%);
+  mix-blend-mode:screen;
+}
+.badge-content{
+  position:relative;padding:.46rem 1.35rem;
+  font-size:.9rem;font-weight:500;letter-spacing:.02em;
+  text-shadow:0 1px 1px rgba(255,255,255,.5);user-select:none;
+}
+
+/* —— burger / X ——————————————————— */
+#burgerBox{
+  position:fixed;top:.7rem;right:.7rem;z-index:9999;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  background:rgba(255,255,255,.18);padding:.35rem;border-radius:8px;
+}
+.burger{width:30px;height:26px;cursor:pointer;position:relative;}
+.burger span{
+  position:absolute;left:0;width:100%;height:3px;background:#000;border-radius:2px;
+  transition:transform .4s cubic-bezier(.4,0,.2,1),opacity .3s;
+}
+.burger span:nth-child(1){top:0;}
+.burger span:nth-child(2){top:50%;transform:translateY(-50%);}
+.burger span:nth-child(3){bottom:0;}
+.burger.open span:nth-child(1){transform:translateY(11px) rotate(45deg);}
+.burger.open span:nth-child(2){opacity:0;}
+.burger.open span:nth-child(3){transform:translateY(-11px) rotate(-45deg);}
+
+/* —— drawer (golden-ratio width desktop) ————————— */
+:root{--drawerW:38.2vw;--drawerBlur:24px;}
+.drawer{
+  position:fixed;top:0;right:0;bottom:0;width:var(--drawerW);
+  transform:translateX(100%);transition:transform .45s cubic-bezier(.4,0,.2,1);
+  background:rgba(255,255,255,.14);
+  backdrop-filter:blur(var(--drawerBlur)) saturate(1.8);
+  -webkit-backdrop-filter:blur(var(--drawerBlur)) saturate(1.8);
+  border-left:1px solid rgba(0,0,0,.15);
+  box-shadow:0 0 22px rgba(0,0,0,.18);
+  display:flex;flex-direction:column;gap:1.8rem;
+  padding:5rem 2rem 2rem;z-index:8000;
+}
+.drawer.open{transform:translateX(0);}
+.drawer a{
+  font-size:clamp(1.4rem,6vw,3rem);font-weight:500;color:#000;
+  text-decoration:none;line-height:1.15;transition:opacity .25s;
+}
+.drawer a:hover{opacity:.6;}
+
+/* —— demo image just to scroll ————————— */
+.demo-img{
+  width:500px;height:300px;border-radius:12px;margin:5.5rem 0 2rem 1.5rem;
+  background:url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat;
+  box-shadow:0 6px 14px rgba(0,0,0,.15);
+}
+
+/* --------------------- EL-ROBOT WHEEL ----------------------------- */
+:root{
+  --ratio:1.25;
+  --diam : clamp(calc(135px*var(--ratio)),calc(15vmin*var(--ratio)),calc(240px*var(--ratio)));
+  --gap  : calc(7vmin*var(--ratio));
+  --fsize: calc(var(--diam)*0.115);
+}
+
+#badge{
+  position:fixed;right:var(--gap);bottom:var(--gap);
+  width:var(--diam);height:var(--diam);
+  opacity:0;pointer-events:none;transition:opacity .35s;z-index:999;
+}
+#badge.show{opacity:1;pointer-events:auto;}
+#badge.spin svg{animation:spin 2s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ⬇ phone overrides — hide wheel, fullscreen drawer ⬇ */
+@media(max-width:480px){
+  #badge{display:none !important;}
+  .drawer{width:100vw;border-left:none;}
+}
+
+#badge svg{width:100%;height:100%;overflow:visible;}
+#badge text{
+  font-family:'Roboto Flex',sans-serif;
+  font-size:var(--fsize);
+  font-weight:650;
+  letter-spacing:.06em;
+  dominant-baseline:middle;text-anchor:middle;
+  fill:#000;
+}
 </style>
 </head>
+
 <body>
-<div class="wrap">
-  <div class="scene">
-    <div id="card" class="card">
-      <div class="layer bg"   style="transform: translateZ(var(--z4));"></div>
-      <div class="layer grid" style="transform: translateZ(var(--z3));"></div>
-      <div class="layer"      style="transform: translateZ(var(--z2));"><div class="orb"></div></div>
-      <div class="layer"      style="transform: translateZ(var(--z1));">
-        <div class="title"><h1>Tilt Depth</h1><p>Tilt to peek around the scene.</p></div>
-      </div>
-      <div class="hud" style="pointer-events:auto">
-        <button id="enableBtn" class="btn">Enable Motion</button>
-        <div style="display:flex;gap:8px;align-items:center">
-          <span class="chip" id="status">Idle</span>
-          <span style="font-size:12px;opacity:.8">Sensitivity</span>
-          <input id="sens" type="range" min="0.2" max="2.0" step="0.1" value="1" />
-        </div>
-      </div>
-    </div>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="badge-wrap">
+    <div class="badge-bg"></div><div class="badge-content">El-Robot Blog</div>
   </div>
+</header>
+
+<!-- BURGER -->
+<div id="burgerBox">
+  <div id="burger" class="burger"><span></span><span></span><span></span></div>
 </div>
-<div id="diag" class="diag">secure:false
-perm:—
-events: ori=0 mot=0
-beta:— gamma:—
-</div>
+
+<!-- DRAWER -->
+<nav id="drawer" class="drawer">
+  <a href="#">Home</a><a href="#">Posts</a><a href="#">Demos</a>
+  <a href="#">About Youssef</a><a href="#">Credits & Gratitude 🤗</a>
+</nav>
+
+<!-- MAIN -->
+<main>
+  <div class="demo-img"></div>
+  <div style="height:130vh;"></div>
+</main>
+
+<!-- WHEEL -->
+<div id="badge"><svg viewBox="0 0 100 100"></svg></div>
 
 <script>
-(() => {
-  const card = document.getElementById('card');
-  const statusEl = document.getElementById('status');
-  const enableBtn = document.getElementById('enableBtn');
-  const sensEl = document.getElementById('sens');
-  const diag = document.getElementById('diag');
+/* ==== burger / drawer ==== */
+const burger=document.getElementById('burger');
+const drawer=document.getElementById('drawer');
+burger.addEventListener('click',()=>{
+  burger.classList.toggle('open');
+  drawer.classList.toggle('open');
+});
+drawer.querySelectorAll('a').forEach(a=>{
+  a.addEventListener('click',()=>{
+    burger.classList.remove('open');
+    drawer.classList.remove('open');
+  });
+});
 
-  // State
-  let targetX=0,targetY=0,targetRX=0,targetRY=0;
-  let x=0,y=0,rx=0,ry=0;
-  let smoothing=0.12;
-  let sensitivity=parseFloat(sensEl.value);
-  let haveOri=false, haveMot=false, granted=false;
+/* ==== wheel glyphs ==== */
+const phrase="E L - R O B O T  🤖  B L O G  🤗  H O M E  🦾  ";
+const svg=document.querySelector('#badge svg');
+const R=48,CX=50,CY=50;
+[...phrase].forEach((ch,i,arr)=>{
+  const ang=-90+i*(360/arr.length), rad=ang*Math.PI/180;
+  const x=CX+R*Math.cos(rad), y=CY+R*Math.sin(rad);
+  const t=document.createElementNS("http://www.w3.org/2000/svg","text");
+  t.setAttribute("x",x); t.setAttribute("y",y);
+  t.setAttribute("transform",`rotate(${ang+90} ${x} ${y})`);
+  t.textContent=ch;
+  svg.appendChild(t);
+});
 
-  const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+/* ==== fade + spin ==== */
+const badge=document.getElementById('badge'); let hide=null;
+addEventListener('scroll',()=>{
+  badge.classList.add('show');
+  clearTimeout(hide); hide=setTimeout(()=>badge.classList.remove('show'),2000);
+},{passive:true});
 
-  function updateDiag(extra={}){
-    const d = {
-      secure: window.isSecureContext,
-      perm: granted ? 'granted' : '—',
-      events: `ori=${haveOri?1:0} mot=${haveMot?1:0}`,
-      ...extra
-    };
-    diag.textContent = `secure:${d.secure}\nperm:${d.perm}\nevents: ${d.events}\n${d.more||''}`;
-  }
-  updateDiag();
-
-  // Animation loop
-  function render(){
-    x += (targetX - x) * smoothing;
-    y += (targetY - y) * smoothing;
-    rx += (targetRX - rx) * smoothing;
-    ry += (targetRY - ry) * smoothing;
-
-    const styles = getComputedStyle(document.documentElement);
-    const maxShift = parseFloat(styles.getPropertyValue('--max-shift'));
-    const maxTilt  = parseFloat(styles.getPropertyValue('--max-tilt'));
-
-    const sx = clamp(x, -maxShift, maxShift);
-    const sy = clamp(y, -maxShift, maxShift);
-    const rxa = clamp(rx, -parseFloat(maxTilt), parseFloat(maxTilt));
-    const rya = clamp(ry, -parseFloat(maxTilt), parseFloat(maxTilt));
-
-    card.style.transform = `translate3d(${sx}px, ${sy}px, 0) rotateX(${rxa}) rotateY(${rya})`;
-    requestAnimationFrame(render);
-  }
-  requestAnimationFrame(render);
-
-  // Orientation (primary path)
-  function onOrientation(e){
-    haveOri = true;
-    if (typeof e.beta !== 'number' || typeof e.gamma !== 'number') return;
-    const nx = clamp(e.gamma/45, -1, 1);
-    const ny = clamp(e.beta/45,  -1, 1);
-
-    const styles = getComputedStyle(document.documentElement);
-    const baseShift = parseFloat(styles.getPropertyValue('--max-shift'));
-    const baseTilt  = parseFloat(styles.getPropertyValue('--max-tilt'));
-
-    targetX = nx * baseShift * sensitivity;
-    targetY = -ny * baseShift * sensitivity;
-    targetRY = nx * baseTilt * sensitivity;
-    targetRX = -ny * baseTilt * sensitivity;
-
-    updateDiag({ more:`beta:${e.beta?.toFixed(1)} gamma:${e.gamma?.toFixed(1)}` });
-  }
-
-  // Motion fallback (derives tilt from gravity vector)
-  function onMotion(e){
-    haveMot = true;
-    const ag = e.accelerationIncludingGravity;
-    if (!ag) return;
-    const RAD = 180/Math.PI;
-    // NOTE: axis mapping varies; this mapping works well in iOS portrait.
-    const beta  = Math.atan2(ag.y, ag.z) * RAD; // front/back
-    const gamma = Math.atan2(ag.x, ag.z) * RAD; // left/right
-    const nx = clamp(gamma/45, -1, 1);
-    const ny = clamp(beta/45,  -1, 1);
-
-    const styles = getComputedStyle(document.documentElement);
-    const baseShift = parseFloat(styles.getPropertyValue('--max-shift'));
-    const baseTilt  = parseFloat(styles.getPropertyValue('--max-tilt'));
-
-    targetX = nx * baseShift * sensitivity;
-    targetY = -ny * baseShift * sensitivity;
-    targetRY = nx * baseTilt * sensitivity;
-    targetRX = -ny * baseTilt * sensitivity;
-
-    updateDiag({ more:`beta~:${beta.toFixed(1)} gamma~:${gamma.toFixed(1)}` });
-  }
-
-  async function enableMotion(){
-    // Hard fail: not HTTPS / not secure context
-    if (!window.isSecureContext) {
-      statusEl.textContent = 'Use HTTPS (required)';
-      updateDiag();
-      return;
-    }
-
-    try {
-      // Request both permissions if available (iOS 13+)
-      const needsOri = typeof DeviceOrientationEvent !== 'undefined'
-        && typeof DeviceOrientationEvent.requestPermission === 'function';
-      const needsMot = typeof DeviceMotionEvent !== 'undefined'
-        && typeof DeviceMotionEvent.requestPermission === 'function';
-
-      let ok = true;
-      if (needsOri) ok = (await DeviceOrientationEvent.requestPermission()) === 'granted' && ok;
-      if (needsMot) ok = (await DeviceMotionEvent.requestPermission()) === 'granted' && ok;
-
-      granted = ok || (!needsOri && !needsMot); // other platforms
-      if (!granted) {
-        statusEl.textContent = 'Permission denied';
-        updateDiag();
-        return;
-      }
-
-      // Listeners
-      window.addEventListener('deviceorientation', onOrientation, { passive:true });
-      window.addEventListener('devicemotion',      onMotion,       { passive:true });
-
-      statusEl.textContent = 'Motion on';
-      enableBtn.style.display = 'none';
-      updateDiag();
-    } catch (err){
-      statusEl.textContent = 'Error enabling motion';
-      console.error(err);
-      updateDiag({ more:String(err) });
-    }
-  }
-
-  // Wire UI
-  enableBtn.addEventListener('click', enableMotion);
-  sensEl.addEventListener('input', () => { sensitivity = parseFloat(sensEl.value); });
-
-  // Mouse fallback for desktop demo
-  window.addEventListener('mousemove', (e) => {
-    if (granted) return; // only before motion is on
-    const r = card.getBoundingClientRect();
-    const nx = clamp((e.clientX - (r.left + r.width/2)) / (r.width/2), -1, 1);
-    const ny = clamp((e.clientY - (r.top + r.height/2)) / (r.height/2), -1, 1);
-    const styles = getComputedStyle(document.documentElement);
-    const baseShift = parseFloat(styles.getPropertyValue('--max-shift'));
-    const baseTilt  = parseFloat(styles.getPropertyValue('--max-tilt'));
-    targetX = nx * baseShift; targetY = -ny * baseShift;
-    targetRY = nx * baseTilt; targetRX = -ny * baseTilt;
-  }, { passive:true });
-
-  window.addEventListener('orientationchange', () => {
-    targetX = targetY = targetRX = targetRY = 0; // recenter
-  }, { passive:true });
-})();
+badge.addEventListener('click',()=>{
+  scrollTo({top:0,behavior:'smooth'});
+  badge.classList.add('spin','show');
+  clearTimeout(hide);
+  setTimeout(()=>{
+    badge.classList.remove('spin');
+    hide=setTimeout(()=>badge.classList.remove('show'),2000);
+  },2000);    // 2-second spin
+});
 </script>
+
 </body>
 </html>
