@@ -1,401 +1,267 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<title>Warhol 5 — Fixed Composer (iPhone-optimised)</title>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Recursive:opsz,wdth,wght,slnt,CASL@14..32,75..100,400..800,-15..0,0..1&display=swap" rel="stylesheet">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Tilt Depth Parallax – Minimal Starter</title>
 <style>
   :root{
-    --bg1:#f3c7b9; --bg2:#ffe3b9; --bg3:#e9e5ff; --bg4:#dfe9ff;
-    --surface:#ffffff; --border: rgba(255,255,255,.5); --text:#0b1324; --muted:#475569;
-    --sidebar:#f7f8fb; --shadow: 0 8px 24px rgba(2,6,23,.10), 0 1px 2px rgba(2,6,23,.06);
-    --sidebarW:64px; /* shrinks via media queries */
+    --max-tilt: 12deg;         /* visual rotation clamp */
+    --max-shift: 30px;         /* XY parallax clamp */
+    --z1: 80px; --z2: 40px; --z3: 0px; --z4: -30px; /* layer depths */
   }
-  *{box-sizing:border-box}
-  html,body{height:100%;}
-  body{
-    margin:0;
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-    color:var(--text);
+  /* Reduce motion: tone down effect amplitudes */
+  @media (prefers-reduced-motion: reduce) {
+    :root{ --max-tilt: 4deg; --max-shift: 10px; --z1: 30px; --z2: 15px; --z3: 0; --z4: 0; }
+  }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: radial-gradient(1200px 800px at 70% 20%, #0f1216, #07090c 60%, #05070a);
+    color: #e8eef5;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+  }
+
+  .wrap {
+    position: fixed; inset: 0;
+    display: grid; place-items: center;
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+             max(24px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  }
+
+  .scene {
+    width: min(92vw, 520px);
+    height: min(62vh, 560px);
+    perspective: 900px;
+    perspective-origin: 50% 45%;
+  }
+
+  .card {
+    position: relative;
+    width: 100%; height: 100%;
+    transform-style: preserve-3d;
+    border-radius: 24px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+    overflow: hidden;
+    will-change: transform;
+  }
+
+  .layer {
+    position: absolute; inset: 0;
+    transform-style: preserve-3d;
+    display: grid; place-items: center;
+    pointer-events: none;
+  }
+
+  .bg {
     background:
-      radial-gradient(36% 40% at 22% 25%, var(--bg1) 0%, rgba(0,0,0,0) 60%),
-      radial-gradient(40% 45% at 78% 30%, var(--bg2) 0%, rgba(0,0,0,0) 65%),
-      radial-gradient(55% 55% at 20% 85%, var(--bg3) 0%, rgba(0,0,0,0) 70%),
-      radial-gradient(60% 60% at 80% 85%, var(--bg4) 0%, rgba(0,0,0,0) 70%),
-      #f6f7fb;
-    background-attachment: fixed;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+      radial-gradient(180px 120px at 15% 20%, rgba(0,200,255,0.25), transparent 60%),
+      radial-gradient(220px 200px at 85% 80%, rgba(120,70,255,0.25), transparent 60%),
+      linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0));
+    filter: saturate(1.1);
   }
 
-  /* Layout */
-  .app{ display:grid; grid-template-columns: var(--sidebarW) 1fr; min-height:100svh; min-height:100dvh; }
-  .sidebar{ border-right:1px solid rgba(2,6,23,.06); padding:8px; background: linear-gradient(180deg, #fff, #f9fbff); }
-  .side-item{
-    width:40px;height:40px;border-radius:12px;
-    display:grid;place-items:center;margin:10px auto;
-    background:var(--sidebar); border:1px solid rgba(2,6,23,.06);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
-    cursor:pointer; transition: transform .06s ease;
-    touch-action: manipulation;
-  }
-  .side-item:hover{ transform: translateY(-1px) }
-  .side-item svg{ width:18px;height:18px; opacity:.85 }
-
-  .main{ position:relative; display:flex; flex-direction:column; min-height:100%; }
-  .brand{
-    position:absolute; top:12px; left:12px; display:flex; align-items:center; gap:8px;
-    font-family:"Recursive", Inter, system-ui;
-    font-variation-settings:"CASL" .6, "wdth" 90, "wght" 720, "slnt" 0;
-    letter-spacing:-.01em;
-  }
-  .brand strong{ font-variation-settings:"CASL" .5, "wdth" 86, "wght" 800 }
-
-  /* Scroll area (hero + chat) */
-  .scroll{
-    flex:1 1 auto; overflow:auto;
-    padding:24px 12px calc(180px + env(safe-area-inset-bottom)); /* keep room for composer */
-  }
-  .hero{ min-height:55vh; display:grid; place-items:center; }
-  .center{ text-align:center; max-width:760px; margin:0 auto; }
-  h1{
-    margin:0 0 8px; font-family:"Recursive", Inter, system-ui;
-    font-variation-settings:"CASL" .7, "wdth" 88, "wght" 780, "slnt" -3;
-    font-size:clamp(22px, 5vw, 32px);
-  }
-  .subtitle{ margin:0 auto 26px; max-width:560px; font-size:15px; line-height:1.6; color:var(--muted) }
-
-  .chat{ max-width:860px; margin:0 auto; display:none; }
-  .msg{ display:flex; gap:10px; margin:18px 0; align-items:flex-start }
-  .avatar{
-    flex:0 0 28px; width:28px;height:28px;border-radius:8px; display:grid;place-items:center;
-    background:#111827; color:#fff; font-weight:700; font-size:11px;
-  }
-  .assistant{ background:#1e293b }
-
-  /* Glass bubbles / cards / composer */
-  .bubble, .composer, .card{
-    background: rgba(255,255,255,0.22);
-    backdrop-filter: blur(14px) saturate(180%);
-    -webkit-backdrop-filter: blur(14px) saturate(180%);
-    border: 1px solid rgba(255,255,255,0.4);
-    box-shadow: 0 8px 32px rgba(2,6,23,0.12);
+  .grid {
+    background-image:
+      linear-gradient(transparent 31px, rgba(255,255,255,0.05) 32px),
+      linear-gradient(90deg, transparent 31px, rgba(255,255,255,0.05) 32px);
+    background-size: 32px 32px;
+    mask-image: radial-gradient(100% 70% at 50% 50%, #000, transparent 85%);
   }
 
-  .bubble{
-    padding:12px 14px; border-radius:14px;
-    max-width: calc(100vw - var(--sidebarW) - 28px);
+  .orb {
+    width: 210px; height: 210px; border-radius: 999px;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95), rgba(180,220,255,0.5) 40%, rgba(0,0,0,0) 70%),
+                radial-gradient(circle at 70% 70%, rgba(120,180,255,0.35), rgba(0,0,0,0) 60%);
+    box-shadow: 0 30px 60px rgba(60,130,255,0.35);
   }
 
-  /* Composer fixed at bottom */
-  .composer-wrap{
-    position:fixed; left:var(--sidebarW); right:0;
-    bottom: max(12px, env(safe-area-inset-bottom)); z-index:30;
-    display:grid; place-items:center; pointer-events:none; transition: transform .2s ease;
+  .title {
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    text-align: center;
+    line-height: 1.2;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.4);
   }
-  .composer{
-    pointer-events:all; display:flex; align-items:center; gap:10px;
-    width: calc(100vw - var(--sidebarW) - 24px); max-width:720px;
-    border-radius:999px; padding:10px 12px;
-  }
-  .chip{ width:36px;height:36px;border-radius:999px; display:grid;place-items:center; border:1px solid rgba(255,255,255,.45); background:rgba(255,255,255,.35); cursor:pointer; }
-  .chip svg{ width:16px;height:16px; opacity:.9 }
-  .plus{ background:rgba(255,255,255,.45) }
-  .input{ flex:1; display:flex; align-items:center}
-  .input input{ width:100%; border:none; outline:none; font-size:16px; padding:10px 6px; background:transparent; color:#0b1324; }
+  .title h1 { font-size: clamp(22px, 4.2vw, 34px); margin: 0 18px; }
+  .title p { font-size: clamp(14px, 2.6vw, 16px); margin: 8px 20px 0; opacity: 0.85; }
 
-  /* Card + lightbox */
-  .card{
-    width: 100%; max-width: 560px; aspect-ratio:1/1;
-    border-radius:16px; overflow:hidden; margin-top:12px; cursor:zoom-in;
+  .hud {
+    position: absolute; left: 12px; right: 12px; bottom: 12px;
+    display: flex; gap: 10px; align-items: center; justify-content: space-between;
+    opacity: 0.9;
   }
-  .card img{ width:100%; height:100%; object-fit:cover; display:block }
-  .caption{ font-size:12px; color:#334155; margin-top:6px }
-
-  .lightbox{ position:fixed; inset:0; background:rgba(2,6,23,.7); display:none; align-items:center; justify-content:center; padding:24px; z-index:60; }
-  .lightbox img{ max-width:92vw; max-height:92vh; border-radius:18px; box-shadow: 0 30px 80px rgba(0,0,0,.5); }
-  .lightbox:focus{ outline:none }
-
-  /* Drawer (assets) */
-  .drawer{
-    position:fixed; top:0; right:-420px; width:420px; max-width:92vw; height:100%;
-    background:rgba(255,255,255,.75);
-    -webkit-backdrop-filter: blur(10px) saturate(160%);
-    backdrop-filter: blur(10px) saturate(160%);
-    border-left:1px solid rgba(255,255,255,.45);
-    box-shadow:-20px 0 60px rgba(2,6,23,.18);
-    transition:right .28s ease; padding:18px; display:flex; flex-direction:column; gap:12px; z-index:50;
+  .btn {
+    appearance: none; border: 0; border-radius: 14px;
+    padding: 12px 16px; font-weight: 600;
+    background: rgba(255,255,255,0.1);
+    color: #eaf3ff;
+    backdrop-filter: blur(8px);
   }
-  .drawer.open{ right:0; }
-  .dropzone{ padding:18px; border:2px dashed rgba(2,6,23,.15); border-radius:14px; background:#f8fafc; text-align:center }
-  .dropzone.drag{ border-color:#0ea5e9; background:#eef6ff; }
-  .thumbs{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; overflow:auto }
-  .thumb{ position:relative; border:1px solid rgba(2,6,23,.1); border-radius:10px; overflow:hidden; background:#fff }
-  .thumb img{ width:100%; height:100%; object-fit:cover; aspect-ratio:1/1 }
-  .thumb .idx{ position:absolute; top:6px; left:6px; background:#111827; color:#fff; font-size:11px; padding:2px 6px; border-radius:999px }
-  .thumb .rm{ position:absolute; top:6px; right:6px; background:#fff; border:1px solid rgba(2,6,23,.2); border-radius:8px; padding:0 6px; font-size:12px; cursor:pointer }
-  .controls{ display:flex; gap:8px }
-  .btn{ border:1px solid rgba(2,6,23,.12); background:#fff; border-radius:10px; padding:10px 12px; cursor:pointer; font-size:14px }
-  .btn.primary{ background:#0ea5e9; color:#fff; border-color:#0ea5e9 }
+  .btn:active { transform: translateY(1px); }
+  .small { font-size: 12px; opacity: 0.8; }
 
-  /* Mobile tweaks */
-  @media (max-width:720px){
-    :root{ --sidebarW:52px; }
-    .subtitle{ font-size:14px }
-    .thumbs{ grid-template-columns:repeat(2,1fr) }
+  .chip {
+    padding: 8px 10px; border-radius: 12px; background: rgba(255,255,255,0.08);
+    font-size: 12px;
   }
-  @media (max-width:430px){
-    :root{ --sidebarW:44px; }
-    .brand{ top:10px; left:10px; font-size:13px }
-    .side-item{ width:34px; height:34px; border-radius:10px }
-    .composer{ width: calc(100vw - var(--sidebarW) - 20px); }
-  }
-
-  /* When keyboard opens on iOS */
-  .kb-open .composer-wrap{ transform: translateY(-12px); }
 </style>
 </head>
 <body>
-<div class="app">
-  <aside class="sidebar">
-    <div class="side-item" id="btnNew" title="New session">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-    </div>
-    <div class="side-item" id="btnAssets" title="Hidden assets">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M4 10h16" stroke="currentColor" stroke-width="1.4"/></svg>
-    </div>
-  </aside>
-
-  <main class="main">
-    <div class="brand">Warhol <strong style="margin-left:6px">5</strong></div>
-
-    <div class="scroll" id="scroll">
-      <section class="hero" id="hero">
-        <div class="center">
-          <h1>Introducing Warhol&nbsp;5</h1>
-          <p class="subtitle">Warhol now has our smartest, fastest, most useful model yet, with thinking built in — so you get the best answer, every time.</p>
+<div class="wrap">
+  <div class="scene">
+    <div id="card" class="card">
+      <!-- deepest background -->
+      <div class="layer bg" style="transform: translateZ(var(--z4));"></div>
+      <!-- grid just above bg -->
+      <div class="layer grid" style="transform: translateZ(var(--z3));"></div>
+      <!-- orb in front -->
+      <div class="layer" style="transform: translateZ(var(--z2));">
+        <div class="orb"></div>
+      </div>
+      <!-- title at the very front -->
+      <div class="layer" style="transform: translateZ(var(--z1));">
+        <div class="title">
+          <h1>iPhone Tilt Depth</h1>
+          <p>Move your phone to peek around the scene.</p>
         </div>
-      </section>
+      </div>
 
-      <section class="chat" id="chat" aria-live="polite">
-        <div class="msg">
-          <div class="avatar assistant">W5</div>
-          <div class="bubble">Hello!</div>
+      <!-- HUD -->
+      <div class="hud">
+        <button id="enableBtn" class="btn">Enable Motion</button>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <span class="chip" id="status">Idle</span>
+          <span class="small">Sensitivity</span>
+          <input id="sens" type="range" min="0.2" max="2.0" step="0.1" value="1" />
         </div>
-        <div id="thread"></div>
-      </section>
-    </div>
-
-    <!-- Composer fixed bottom -->
-    <div class="composer-wrap" id="composerWrap">
-      <div class="composer" role="form" aria-label="Message composer">
-        <button class="chip plus" title="Starter" aria-label="Starter action">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-        </button>
-        <label class="input" for="prompt" style="display:flex; align-items:center; gap:6px;">
-          <input id="prompt" placeholder="Ask anything" aria-label="Ask anything" autocomplete="off" inputmode="text"/>
-        </label>
-        <button class="chip" id="btnAssets2" title="Assets" aria-label="Open assets drawer">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M4 10h16" stroke="currentColor" stroke-width="1.4"/></svg>
-        </button>
       </div>
     </div>
-  </main>
-</div>
-
-<!-- Drawer -->
-<div class="drawer" id="drawer" aria-hidden="true" aria-label="Hidden assets drawer">
-  <h3>Hidden Assets</h3>
-  <div class="dropzone" id="dropzone">Drop images here or tap to choose</div>
-  <input type="file" id="fileInput" accept="image/*" multiple style="display:none"/>
-  <div class="controls">
-    <button class="btn" id="btnClear">Clear</button>
-    <button class="btn primary" id="btnCloseDrawer">Done</button>
   </div>
-  <div class="thumbs" id="thumbs"></div>
-</div>
-
-<!-- Lightbox -->
-<div class="lightbox" id="lightbox" tabindex="-1" role="dialog" aria-modal="true">
-  <img alt="Enlarged artwork"/>
 </div>
 
 <script>
-  const elPrompt = document.getElementById('prompt');
-  const hero = document.getElementById('hero');
-  const chat = document.getElementById('chat');
-  const thread = document.getElementById('thread');
-  const scrollArea = document.getElementById('scroll');
-  const composerWrap = document.getElementById('composerWrap');
+(() => {
+  const card = document.getElementById('card');
+  const statusEl = document.getElementById('status');
+  const enableBtn = document.getElementById('enableBtn');
+  const sensEl = document.getElementById('sens');
 
-  // Drawer
-  const drawer = document.getElementById('drawer');
-  const btnAssets = document.getElementById('btnAssets');
-  const btnAssets2 = document.getElementById('btnAssets2');
-  const btnCloseDrawer = document.getElementById('btnCloseDrawer');
-  const dropzone = document.getElementById('dropzone');
-  const fileInput = document.getElementById('fileInput');
-  const thumbs = document.getElementById('thumbs');
-  const btnClear = document.getElementById('btnClear');
+  // Internal state
+  let targetX = 0, targetY = 0;   // desired parallax (pixels)
+  let targetRX = 0, targetRY = 0; // desired rotation (deg)
+  let x = 0, y = 0, rx = 0, ry = 0; // smoothed state
+  let smoothing = 0.12;            // 0..1 (higher = snappier)
+  let sensitivity = parseFloat(sensEl.value); // user knob
+  let hasMotion = false;
 
-  // Lightbox
-  const lightbox = document.getElementById('lightbox');
-  const lbImg = lightbox.querySelector('img');
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
-  // Image queue
-  const queue = [];
-  let cursor = 0;
+  // Apply transforms on each frame
+  function render() {
+    // Ease towards target
+    x += (targetX - x) * smoothing;
+    y += (targetY - y) * smoothing;
+    rx += (targetRX - rx) * smoothing;
+    ry += (targetRY - ry) * smoothing;
 
-  function openDrawer(){ drawer.classList.add('open'); drawer.setAttribute('aria-hidden','false'); }
-  function closeDrawer(){ drawer.classList.remove('open'); drawer.setAttribute('aria-hidden','true'); }
-  btnAssets.onclick = openDrawer;
-  btnAssets2.onclick = openDrawer;
-  btnCloseDrawer.onclick = closeDrawer;
+    const maxShift = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--max-shift'));
+    const maxTilt = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--max-tilt'));
 
-  dropzone.onclick = ()=> fileInput.click();
-  fileInput.onchange = (e)=> handleFiles(e.target.files);
+    const sx = clamp(x, -maxShift, maxShift);
+    const sy = clamp(y, -maxShift, maxShift);
+    const rxa = clamp(rx, -parseFloat(maxTilt), parseFloat(maxTilt));
+    const rya = clamp(ry, -parseFloat(maxTilt), parseFloat(maxTilt));
 
-  ;['dragenter','dragover'].forEach(evt=> dropzone.addEventListener(evt, (e)=>{ e.preventDefault(); e.stopPropagation(); dropzone.classList.add('drag'); }));
-  ;['dragleave','drop'].forEach(evt=> dropzone.addEventListener(evt, (e)=>{ e.preventDefault(); e.stopPropagation(); dropzone.classList.remove('drag'); }));
-  dropzone.addEventListener('drop', (e)=>{ handleFiles(e.dataTransfer.files); });
+    card.style.transform =
+      `translate3d(${sx}px, ${sy}px, 0) rotateX(${rxa}) rotateY(${rya})`;
 
-  function handleFiles(files){
-    const arr = Array.from(files).filter(f=> /^image\//.test(f.type));
-    arr.forEach(f=>{
-      const url = URL.createObjectURL(f);
-      queue.push({name:f.name, url});
-    });
-    renderThumbs();
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+
+  // Map device orientation (beta: front/back, gamma: left/right) to targets
+  function onOrientation(e) {
+    // Some devices provide null initially
+    if (typeof e.beta !== 'number' || typeof e.gamma !== 'number') return;
+
+    // Normalised tilt in range roughly -1..1
+    const nx = clamp(e.gamma / 45, -1, 1); // left/right
+    const ny = clamp(e.beta  / 45, -1, 1); // front/back
+
+    // Parallax shift (pixels)
+    const baseShift = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--max-shift'));
+    targetX = nx * baseShift * sensitivity;
+    targetY = ny * baseShift * sensitivity * -1; // invert Y for natural feel
+
+    // Subtle rotations to enhance depth
+    const baseTilt = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--max-tilt'));
+    targetRY = nx * baseTilt * sensitivity;       // yaw
+    targetRX = ny * baseTilt * sensitivity * -1;  // pitch
   }
 
-  function renderThumbs(){
-    thumbs.innerHTML='';
-    queue.forEach((item, i)=>{
-      const el = document.createElement('div');
-      el.className = 'thumb';
-      el.draggable = true;
-      el.dataset.index = i;
-      el.innerHTML = `<img src="${item.url}" alt=""><div class="idx">${i+1}</div><button class="rm" title="Remove">×</button>`;
-      el.querySelector('.rm').onclick = ()=>{ queue.splice(i,1); if(cursor>i) cursor--; renderThumbs(); };
-      el.addEventListener('dragstart', (e)=>{ e.dataTransfer.setData('text/plain', i.toString()); });
-      el.addEventListener('dragover', (e)=>{ e.preventDefault(); });
-      el.addEventListener('drop', (e)=>{
-        e.preventDefault();
-        const from = parseInt(e.dataTransfer.getData('text/plain'),10);
-        const to = i;
-        if(from===to) return;
-        const [m] = queue.splice(from,1);
-        queue.splice(to,0,m);
-        if(cursor===from) cursor = to;
-        renderThumbs();
-      });
-      thumbs.appendChild(el);
-    });
+  // Mouse fallback (desktop demo / Safari without permission)
+  function onMouse(e) {
+    const rect = card.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const nx = clamp((e.clientX - cx) / (rect.width / 2), -1, 1);
+    const ny = clamp((e.clientY - cy) / (rect.height / 2), -1, 1);
+
+    const baseShift = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--max-shift'));
+    const baseTilt = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--max-tilt'));
+    targetX = nx * baseShift;
+    targetY = -ny * baseShift;
+    targetRY = nx * baseTilt;
+    targetRX = -ny * baseTilt;
   }
 
-  btnClear.onclick = ()=>{
-    queue.splice(0, queue.length);
-    cursor = 0;
-    renderThumbs();
-  };
+  // Permission flow for iOS Safari
+  async function enableMotion() {
+    try {
+      // iOS 13+ requires explicit permission after a user gesture
+      const needsPerm =
+        typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function';
 
-  function addMsg(role, html){
-    const msg = document.createElement('div');
-    msg.className = 'msg';
-    const avatar = document.createElement('div');
-    avatar.className = 'avatar ' + (role==='assistant' ? 'assistant' : '');
-    avatar.textContent = role==='assistant' ? 'W5' : 'You';
-    const bubble = document.createElement('div');
-    bubble.className = 'bubble';
-    bubble.innerHTML = html;
-    msg.append(avatar, bubble);
-    thread.appendChild(msg);
-    chat.style.display='block';
-    // Scroll to bottom of the scrollable conversation area
-    scrollArea.scrollTo({top: scrollArea.scrollHeight, behavior:'smooth'});
-    return bubble;
-  }
-
-  function showGenerating(){
-    return addMsg('assistant', `<span class="loading">Generating<span class="dots"></span></span>`);
-  }
-
-  function showNextImage(){
-    if(cursor >= queue.length){
-      addMsg('assistant', 'No queued images left. Open the drawer to add more.');
-      return;
+      if (needsPerm) {
+        const res = await DeviceOrientationEvent.requestPermission();
+        if (res !== 'granted') {
+          statusEl.textContent = 'Motion blocked';
+          return;
+        }
+      }
+      // Start listening
+      window.addEventListener('deviceorientation', onOrientation, { passive: true });
+      hasMotion = true;
+      statusEl.textContent = 'Motion on';
+      enableBtn.style.display = 'none';
+    } catch (err) {
+      statusEl.textContent = 'Error enabling motion';
+      console.error(err);
     }
-    const item = queue[cursor++];
-    const wrap = document.createElement('div');
-    const card = document.createElement('div');
-    card.className = 'card';
-    const img = document.createElement('img');
-    img.alt = item.name; img.src = item.url;
-    card.appendChild(img);
-    wrap.appendChild(card);
-    const cap = document.createElement('div'); cap.className = 'caption'; cap.textContent = item.name; wrap.appendChild(cap);
-    const bubble = addMsg('assistant', ''); bubble.appendChild(wrap);
-
-    // Keep the new result fully in view on mobile
-    bubble.scrollIntoView({behavior:'smooth', block:'end'});
-    scrollArea.scrollTo({top: scrollArea.scrollHeight, behavior:'smooth'});
-
-    card.addEventListener('click', ()=>{ lbImg.src = item.url; lightbox.style.display='flex'; lightbox.focus(); });
   }
 
-  lightbox.addEventListener('click', (e)=>{ if(e.target===lightbox){ lightbox.style.display='none'; lbImg.src=''; } });
-  lightbox.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ lightbox.style.display='none'; lbImg.src=''; } });
-
-  elPrompt.addEventListener('keydown', (e)=>{
-    if(e.key === 'Enter'){
-      const v = elPrompt.value.trim();
-      if(!v) return;
-      hero.style.display='none';
-      chat.style.display='block';
-      addMsg('user', v);
-
-      const loading = showGenerating();
-
-      setTimeout(()=>{
-        loading.innerHTML = ' ';
-        showNextImage();
-      }, 900);
-
-      elPrompt.value='';
-    }
+  // Wire up UI
+  enableBtn.addEventListener('click', enableMotion);
+  sensEl.addEventListener('input', () => {
+    sensitivity = parseFloat(sensEl.value);
   });
 
-  document.getElementById('btnNew').onclick = ()=>{
-    thread.innerHTML='';
-    chat.style.display='none';
-    hero.style.display='grid';
-    cursor = 0;
-    scrollArea.scrollTop = 0;
-    elPrompt.focus();
-  };
+  // Desktop fallback
+  window.addEventListener('mousemove', (e) => {
+    if (!hasMotion) onMouse(e);
+  }, { passive: true });
 
-  // iOS keyboard handling: keep composer visible and avoid layout jumps (Visual Viewport API)
-  if (window.visualViewport) {
-    const onVVChange = () => {
-      const vv = window.visualViewport;
-      if(!vv) return;
-      const overlap = Math.max(0, (window.innerHeight - (vv.height + vv.offsetTop)));
-      const bottomOffset = 12 + overlap;
-      composerWrap.style.bottom = `calc(${bottomOffset}px + env(safe-area-inset-bottom))`;
-      document.body.classList.toggle('kb-open', vv.height < window.innerHeight * 0.9);
-      // Keep input visible when keyboard opens
-      scrollArea.scrollTo({ top: scrollArea.scrollHeight });
-    };
-    visualViewport.addEventListener('resize', onVVChange);
-    visualViewport.addEventListener('scroll', onVVChange);
-  }
-
-  // Focus management
-  elPrompt.addEventListener('focus', ()=>{
-    setTimeout(()=>{ scrollArea.scrollTo({ top: scrollArea.scrollHeight, behavior: 'smooth' }); }, 50);
-  });
+  // Orientation change handling (keeps feel consistent)
+  window.addEventListener('orientationchange', () => {
+    // Recentre smoothly
+    targetX = targetY = targetRX = targetRY = 0;
+  }, { passive: true });
+})();
 </script>
 </body>
 </html>
